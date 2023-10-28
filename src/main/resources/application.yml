@@ -10,14 +10,43 @@ spring:
             - Path=/gather-service/**
             - Method=GET, POST
           filters:
+            - RemoveRequestHeader=Cookie
             - RewritePath=/gather-service/(?<segment>.*), /$\{segment}
+
         - id: join-service
           uri: lb://JOIN-SERVICE
           predicates:
             - Path=/join-service/**
             - Method=GET, POST, DELETE, PATCH, PUT
           filters:
+            - RemoveRequestHeader=Cookie
             - RewritePath=/join-service/(?<segment>.*), /$\{segment}
+
+        - id: member-service
+          uri: lb://MEMBER-SERVICE
+          predicates:
+            - Path=/member-service/members
+            - Method=POST
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/member-service/(?<segment>.*), /$\{segment}
+        - id: member-service
+          uri: lb://MEMBER-SERVICE
+          predicates:
+            - Path=/member-service/login
+            - Method=POST
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/member-service/(?<segment>.*), /$\{segment}
+        - id: member-service
+          uri: lb://MEMBER-SERVICE
+          predicates:
+            - Path=/member-service/**
+            - Method=GET, POST
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/member-service/(?<segment>.*), /$\{segment}
+            - AuthenticationHeaderFilter
       default-filters:
         - name: LoggingFilter
           args:
@@ -31,6 +60,14 @@ eureka:
     register-with-eureka: true
     service-url:
       defaultZone: http://localhost:8761/eureka
+
+token:
+  expiration_time: 21600000 # 60 * 60 * 6 * 1000=> 6시간
+  secret: testtoken # TODO 설정 파일 보안정보 옮기기
+
+auth:
+  no-header-msg: 로그인 해주세요.
+  invalid: 인증토큰이 유효하지 않습니다.
 
 server:
   port: 8000
