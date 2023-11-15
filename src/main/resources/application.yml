@@ -1,6 +1,12 @@
 spring:
   application:
     name: apigateway-service
+  rabbitmq:
+    host: 127.0.0.1
+    stream:
+      username: guest
+      password: guest
+    port: 5672
   cloud:
     gateway:
       routes:
@@ -47,12 +53,33 @@ spring:
             - RemoveRequestHeader=Cookie
             - RewritePath=/member-service/(?<segment>.*), /$\{segment}
             - AuthenticationHeaderFilter
+
+        - id: chat-service
+          uri: lb:ws://CHAT-SERVICE
+          predicates:
+            - Path=/chat-service/**
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/chat-service/(?<segment>.*), /$\{segment}
       default-filters:
         - name: LoggingFilter
           args:
             baseMessage: Gateway Service Logger
             preLogger: true
             postLogger: true
+        - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "http://127.0.0.1:5500"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+            allowedHeaders:
+              - "*"
+            allowedCredentials: true
 
 eureka:
   client:
@@ -71,3 +98,9 @@ auth:
 
 server:
   port: 8000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: refresh, health, beans, busrefresh, info
